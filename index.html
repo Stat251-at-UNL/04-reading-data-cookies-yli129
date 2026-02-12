@@ -164,8 +164,8 @@ dtype: object</code></pre>
 <ol type="1">
 <li>Which ingredients are used most frequently across all cookie recipes?</li>
 <li>Are there ingredient combinations that commonly appear together?</li>
-<li>Is there a correlation between ‘Quantity’ and ‘Rating’?</li>
-<li>What is the most common measurement unit?</li>
+<li>Are there any missing in the dataset?</li>
+<li>What are the top 20 most common ingredients?</li>
 <li>Does the variety of ingredients affect the rating?</li>
 </ol>
 </section>
@@ -296,7 +296,7 @@ Attaching package: 'dplyr'</code></pre>
 </div>
 <p>[Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?</p>
 <ul>
-<li>I discovered that the dataset’s descriptive parts, such as Ingredient, Unit, and Text, are perfectly intact with zero missing values. In contrast, the Rating and Quantity columns show many missing entries, indicating that while we have a full list of ingredients, we lack complete performance metrics for over half of the recipes.</li>
+<li>I discovered that the dataset’s descriptive parts, such as Ingredient, Unit, and Text, are perfectly intact with zero missing values. In contrast, Rating shows about 50% missing at the row level, while Quantity has no missing values.</li>
 </ul>
 </section>
 <section id="generating-tables" class="level3">
@@ -304,28 +304,31 @@ Attaching package: 'dplyr'</code></pre>
 <p>Another useful technique for exploratory data analysis is to generate summary tables. You may want to use the <code>dplyr</code> package in R (<code>group_by</code> or <code>count</code> functions), as well as the <code>groupby</code> and <code>count</code> methods in Pandas. <a href="https://sparkbyexamples.com/pandas/pandas-groupby-count-examples/">Python example</a>, <a href="https://dplyr.tidyverse.org/reference/count.html">R example</a></p>
 <p>[Part 1] Using R and Python, generate a table that shows what <strong>proportion</strong> of recipes contain each type of ingredient, for the most common 20 ingredients.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the total number of unique recipes</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>total_recipes_r <span class="ot">&lt;-</span> cookies1 <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="fu">n_distinct</span>(Recipe_Index)) <span class="sc">%&gt;%</span> <span class="fu">pull</span>()</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the duplicate ingredient</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cookies1_dedup <span class="ot">&lt;-</span> cookies1 <span class="sc">%&gt;%</span> <span class="fu">distinct</span>(Recipe_Index, Ingredient, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the top 20 ingredients and calculate their proportions</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>top_20_r <span class="ot">&lt;-</span> cookies1 <span class="sc">%&gt;%</span> </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Ingredient, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">20</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">proportion =</span> n <span class="sc">/</span> total_recipes_r)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the proportion table</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(top_20_r)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the total number of unique recipes</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>total_recipes_r <span class="ot">&lt;-</span> cookies1_dedup <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="fu">n_distinct</span>(Recipe_Index)) <span class="sc">%&gt;%</span> <span class="fu">pull</span>()</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the top 20 ingredients and calculate their proportions</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>top_20_r <span class="ot">&lt;-</span> cookies1_dedup <span class="sc">%&gt;%</span> </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Ingredient, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">20</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">proportion =</span> n <span class="sc">/</span> total_recipes_r)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the proportion table</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(top_20_r)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                   Ingredient   n proportion
-1                         egg 212 1.01435407
+1                         egg 204 0.97607656
 2                     vanilla 196 0.93779904
 3           all purpose flour 193 0.92344498
 4                 baking soda 187 0.89473684
-5                       sugar 175 0.83732057
+5                       sugar 174 0.83253589
 6           light brown sugar 170 0.81339713
-7                        salt 168 0.80382775
-8                      butter 160 0.76555024
-9    semisweet chocolate chip 159 0.76076555
+7                        salt 167 0.79904306
+8                      butter 159 0.76076555
+9    semisweet chocolate chip 156 0.74641148
 10              baking powder  50 0.23923445
 11                     walnut  39 0.18660287
 12        milk chocolate chip  31 0.14832536
@@ -340,36 +343,39 @@ Attaching package: 'dplyr'</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the total number of unique recipes</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>total_recipes_py <span class="op">=</span> cookies2[<span class="st">'Recipe_Index'</span>].nunique()</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the duplicate ingredient</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cookies2_dedup <span class="op">=</span> cookies2[[<span class="st">'Recipe_Index'</span>, <span class="st">'Ingredient'</span>]].drop_duplicates()</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the top 20 ingredients</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>top_20_py <span class="op">=</span> (</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    cookies2[<span class="st">'Ingredient'</span>]</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    .value_counts()</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    .head(<span class="dv">20</span>)</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename these two labels</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>top_20_py.columns <span class="op">=</span> [<span class="st">'Ingredient'</span>, <span class="st">'count'</span>]</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the total number of unique recipes</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>total_recipes_py <span class="op">=</span> cookies2_dedup[<span class="st">'Recipe_Index'</span>].nunique()</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the top 20 ingredients</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>top_20_py <span class="op">=</span> (</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    cookies2_dedup[<span class="st">'Ingredient'</span>]</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    .value_counts()</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    .head(<span class="dv">20</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the proportions</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>top_20_py[<span class="st">'proportion'</span>] <span class="op">=</span> top_20_py[<span class="st">'count'</span>] <span class="op">/</span> total_recipes_py</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename these two labels</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>top_20_py.columns <span class="op">=</span> [<span class="st">'Ingredient'</span>, <span class="st">'count'</span>]</span>
 <span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the proportion table</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(top_20_py)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the proportions</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>top_20_py[<span class="st">'proportion'</span>] <span class="op">=</span> top_20_py[<span class="st">'count'</span>] <span class="op">/</span> total_recipes_py</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the proportion table</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(top_20_py)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                    Ingredient  count  proportion
-0                          egg    212    1.014354
+0                          egg    204    0.976077
 1                      vanilla    196    0.937799
 2            all purpose flour    193    0.923445
 3                  baking soda    187    0.894737
-4                        sugar    175    0.837321
+4                        sugar    174    0.832536
 5            light brown sugar    170    0.813397
-6                         salt    168    0.803828
-7                       butter    160    0.765550
-8     semisweet chocolate chip    159    0.760766
+6                         salt    167    0.799043
+7                       butter    159    0.760766
+8     semisweet chocolate chip    156    0.746411
 9                baking powder     50    0.239234
 10                      walnut     39    0.186603
 11         milk chocolate chip     31    0.148325
@@ -419,14 +425,14 @@ Attaching package: 'dplyr'</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Pull the top 10 most common ingredients</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>top_10_r <span class="ot">&lt;-</span> top_20_r <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Pull the top 20 most common ingredients</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>top_20_plot <span class="ot">&lt;-</span> top_20_r <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">20</span>)</span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a horizontal bar chart of ingredient proportions</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_10_r, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Ingredient, proportion), <span class="at">y =</span> proportion)) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_20_plot, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Ingredient, proportion), <span class="at">y =</span> proportion)) <span class="sc">+</span></span>
 <span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span> </span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Top 10 Ingredients"</span>, <span class="at">x =</span> <span class="st">"Ingredient"</span>, <span class="at">y =</span> <span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Top 20 Ingredients"</span>, <span class="at">x =</span> <span class="st">"Ingredient"</span>, <span class="at">y =</span> <span class="st">"Proportion"</span>) <span class="sc">+</span></span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
@@ -438,7 +444,7 @@ Attaching package: 'dplyr'</code></pre>
 </div>
 <p>[Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.</p>
 <ul>
-<li>There is an interesting observation that the proportion of egg exceed 1, which seems like an error. Upon closer inspection, I find the egg category includes sub-ingredients like yolks or whites. Consequently, this leads to a total count that surpasses the number of recipes.</li>
+<li>The plot shows that just a few ingredients are used in most recipes, like salt, flour, baking soda, sugar, and butter. After those, the proportions drop a lot, so many ingredients seem optional. Next, I want to check whether recipes with these less common ingredients have different ratings.</li>
 </ul>
 </section>
 </section>

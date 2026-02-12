@@ -47,8 +47,8 @@ Generate at least 5 questions you might explore using this database of cookie in
 
 1. Which ingredients are used most frequently across all cookie recipes?
 2. Are there ingredient combinations that commonly appear together?
-3. Is there a correlation between 'Quantity' and 'Rating'?
-4. What is the most common measurement unit?
+3. Are there any missing in the dataset?
+4. What are the top 20 most common ingredients?
 5. Does the variety of ingredients affect the rating?
 
 
@@ -82,7 +82,7 @@ cookies_py = skim(cookies2[['Rating', 'Quantity']])
 
 [Part 2] Write 1-2 sentences about what you can tell from each summary display you generate. Did you discover anything new about the data?
 
-* I discovered that the dataset's descriptive parts, such as Ingredient, Unit, and Text, are perfectly intact with zero missing values. In contrast, the Rating and Quantity columns show many missing entries, indicating that while we have a full list of ingredients, we lack complete performance metrics for over half of the recipes.
+* I discovered that the dataset's descriptive parts, such as Ingredient, Unit, and Text, are perfectly intact with zero missing values. In contrast, Rating shows about 50% missing at the row level, while Quantity has no missing values.
 
 ### Generating Tables
 
@@ -91,11 +91,14 @@ You may want to use the `dplyr` package in R (`group_by` or `count` functions), 
 
 [Part 1] Using R and Python, generate a table that shows what **proportion** of recipes contain each type of ingredient, for the most common 20 ingredients.
 ```{r}
-# Calculate the total number of unique recipes
-total_recipes_r <- cookies1 %>% summarise(n_distinct(Recipe_Index)) %>% pull()
+# Clean the duplicate ingredient
+cookies1_dedup <- cookies1 %>% distinct(Recipe_Index, Ingredient, .keep_all = TRUE)
+
+# Count the total number of unique recipes
+total_recipes_r <- cookies1_dedup %>% summarise(n_distinct(Recipe_Index)) %>% pull()
 
 # Identify the top 20 ingredients and calculate their proportions
-top_20_r <- cookies1 %>% 
+top_20_r <- cookies1_dedup %>% 
   count(Ingredient, sort = TRUE) %>% 
   slice_head(n = 20) %>% 
   mutate(proportion = n / total_recipes_r)
@@ -105,13 +108,15 @@ print(top_20_r)
 ```
 
 ```{python}
+# Clean the duplicate ingredient
+cookies2_dedup = cookies2[['Recipe_Index', 'Ingredient']].drop_duplicates()
 
-# Calculate the total number of unique recipes
-total_recipes_py = cookies2['Recipe_Index'].nunique()
+# Count the total number of unique recipes
+total_recipes_py = cookies2_dedup['Recipe_Index'].nunique()
 
 # Identify the top 20 ingredients
 top_20_py = (
-    cookies2['Ingredient']
+    cookies2_dedup['Ingredient']
     .value_counts()
     .head(20)
     .reset_index()
@@ -164,17 +169,17 @@ Using whatever plotting system you are comfortable with in R or python, see if y
 ```{r}
 library(ggplot2)
 
-# Pull the top 10 most common ingredients
-top_10_r <- top_20_r %>% slice_head(n = 10)
+# Pull the top 20 most common ingredients
+top_20_plot <- top_20_r %>% slice_head(n = 20)
 
 # Build a horizontal bar chart of ingredient proportions
-ggplot(top_10_r, aes(x = reorder(Ingredient, proportion), y = proportion)) +
+ggplot(top_20_plot, aes(x = reorder(Ingredient, proportion), y = proportion)) +
   geom_col(fill = "steelblue") +
   coord_flip() + 
-  labs(title = "Top 10 Ingredients", x = "Ingredient", y = "Proportion") +
+  labs(title = "Top 20 Ingredients", x = "Ingredient", y = "Proportion") +
   theme_minimal()
 ```
 
 [Part 2] Write 2-3 sentences about what you can learn from that plot and what directions you might want to investigate from here.
 
-* There is an interesting observation that the proportion of egg exceed 1, which seems like an error. Upon closer inspection, I find the egg category includes sub-ingredients like yolks or whites. Consequently, this leads to a total count that surpasses the number of recipes.
+* The plot shows that just a few ingredients are used in most recipes, like salt, flour, baking soda, sugar, and butter. After those, the proportions drop a lot, so many ingredients seem optional. Next, I want to check whether recipes with these less common ingredients have different ratings. 
